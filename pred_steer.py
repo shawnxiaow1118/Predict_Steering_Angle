@@ -3,8 +3,8 @@
 #
 # *** Udacity Predict steering angle ****
 #
-# Copyright 2016 Zhaocheng Liu, Xiao Wang
-# {zcliu,  xwang696}@gatech.edu
+# Copyright 2016 Xiao Wang, Zhaocheng Liu
+# {xwang696, zcliu}@gatech.edu
 
 import tensorflow as tf
 
@@ -109,3 +109,34 @@ def inference(images):
 		output = tf.matmul(reshape, weights)+biases
 	return output
 		
+
+def loss(output, angles):
+	""" Calculate the RMSE of prediction angles and labeled angles
+	Args:
+		output:  prediction tensor, float [batch_size]
+		angles:  label tesor, float [batch_size]
+
+	Returns:
+		loss: Loss tensor of type float
+	"""
+	### calculate square sum
+	sum_square = tf.square(tf.sub(output, angles))
+	### calculate mean square mean
+	mean_square = tf.reduce_mean(sum_square)
+	### take root
+	loss = tf.sqrt(mean_square)
+	return loss
+
+def train(loss, learning_rate):
+	""" Setting the training operation
+	Args: 
+		loss: loss tensor, from loss()
+		learning_rate: the learning reate for gradient descent 
+	"""
+	### creat the optimizer using learing_rate
+	optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+	###  creat a global variable
+	global_step = tf.Variable(0, name = 'global_step',trainanle = False)
+	### note use global step to track trainging step
+	train_op = optimizer.minimize(loss, global_step = global_step)
+	return train_op
