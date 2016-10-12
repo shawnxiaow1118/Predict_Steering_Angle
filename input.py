@@ -14,6 +14,7 @@ HEIGHT = 480
 WIDTH = 640
 CHANNEL = 3
 random.seed(18)
+data_dir = "./image/"
 
 def read_file_list(list_file):
 	""" Read image file names and angles from list file
@@ -26,11 +27,14 @@ def read_file_list(list_file):
 	f = open(list_file,'r')
 	temp = f.read().splitlines()
 	filenames = []
+	labels = []
 	for line in temp:
-		filenames.append("./image/"+line)
-	return filenames
+		one_line = line.split(" ")
+		filenames.append(data_dir+one_line[0])
+		labels.append(one_line[1])
+	return filenames, labels
 
-def read_data(filename_queue):
+def read_data(input_queue):
 	""" Read and decode a single image from input queue
 	Args:
 		filename_queue: a queue contains file name, A scalar string tensor
@@ -38,14 +42,14 @@ def read_data(filename_queue):
 	Returns:
 		two tensors: the decoded image and float angles
 	"""
-	reader = tf.WholeFileReader()
-	#print(filename_queue[1])	
-	#value = tf.read_file(filename_queue[0])
-	key, value = reader.read(filename_queue)
-	my_img = tf.image.decode_jpeg(value, channels = CHANNEL)
-	my_img = tf.image.resize_images(my_img,HEIGHT, WIDTH)
-	#tf.cast(my_img, tf.uint8)
-	return my_img
+	#reader = tf.WholeFileReader()
+	angle = input_queue[1]
+	#key, value = reader.read(input_queue[0])
+	value = tf.read_file(input_queue[0])
+	img = tf.image.decode_jpeg(value, channels = CHANNEL)
+	img = tf.image.resize_images(img,HEIGHT, WIDTH)
+	tf.cast(angle, tf.float32)
+	return img, angle
 
 def input(filepath, BATCH_SIZE):
 	""" Provide batch images and angles
@@ -58,16 +62,16 @@ def input(filepath, BATCH_SIZE):
 		 A input data tensor with first dimension as batch_size and a tensor for the angls
 	"""
 	### Read filelist 
-	filenames = read_file_list(filepath)
+	filenames, labels = read_file_list(filepath)
 	### Create file queue
-	filename_queue = tf.train.string_input_producer(filenames)
+	input_queue = tf.train.slice_input_producer([filenames,labels])
 	### read image from the input queue
-	image = read_data(filename_queue)
+	image, ang = read_data(input_queue)
 	### create batch input
-	images = tf.train.batch([image], batch_size = BATCH_SIZE)
-	return images	
+	images, angles = tf.train.batch([image, ang], batch_size = BATCH_SIZE)
+	return images, angles
 
-# filenames = read_file_list("./image/files.txt")
+#filenames,labels = read_file_list("./image/angles.txt")
 # init_op = tf.initialize_all_variables()
 # filename_queue = tf.train.string_input_producer(filenames)
 # image = read_data(filename_queue)
@@ -82,7 +86,7 @@ def input(filepath, BATCH_SIZE):
 # 		print(im.shape)
 
 # 	coord.request_stop()
-# 	coord.join(threads)
+#	coord.join(threads)
 
 def distorted_inputs(filepath, BATCH_SIZE):
 	""" Provide batch distorted images and angles
@@ -95,9 +99,9 @@ def distorted_inputs(filepath, BATCH_SIZE):
 	"""
 	filenames = read_file_list(filepath)
 	### Create file queue
-	filename_queue = tf.train.string_input_producer(filenames)
+	input_queue = tf.train.slice_input_producer(filenames)
 	### read image from the input queue
-	image = read_data(filename_queue)
+	image,ang = read_data(input_queue)
 	### flip image randomly
 	distorted_image = tf.image.flip_left_right(image)
 	### modify brightness and contrast with random order
@@ -112,6 +116,6 @@ def distorted_inputs(filepath, BATCH_SIZE):
 	### create batch input
 	min_after_dequeue = 150
 	capacity = min_after_dequeue + 3*BATCH_SIZE
-	images = tf.train.shuffle_batch([distorted_image], batch_size = BATCH_SIZE,
+	images, angles = tf.train.shuffle_batch([distorted_image, ang], batch_size = BATCH_SIZE,
 		num_threads = 3, capacity = capacity, min_after_dequeue = min_after_dequeue)
-	return images	
+	return images, angles

@@ -9,11 +9,15 @@
 import tensorflow as tf
 import input
 
-images_placeholder = tf.placeholder(tf.float32, shape=(12,480,640,3))
-
 init_op = tf.initialize_all_variables()
-images = input.distorted_inputs("./image/files.txt", 3)
-#images = input.input("./image/files.txt", 3)
+images, angles = input.distorted_inputs("./image/angles.txt", 2)
+#images,angles = input.input("./image/angles.txt", 3)
+
+#with tf.name_scope('input'):
+#	tf.image_summary('input', images, max_images = 2)
+
+#merged = tf.merge_all_summaries()
+#input_writer = tf.train.SummaryWriter('./', graph = tf.get_default_graph())
 
 with tf.Session() as sess:
 	sess.run(init_op)
@@ -22,6 +26,9 @@ with tf.Session() as sess:
 	threads = tf.train.start_queue_runners(coord=coord, sess = sess)
 	for i in range(0,10):
 		im = sess.run(images)
+		an = sess.run(angles)
+		#summary = sess.run(merged)
+		#input_writer.add_summary(summary,i)
 	# try:
 	# 	while not coord.should_stop():
  #        	# Run training steps or whatever
