@@ -9,12 +9,11 @@
 import tensorflow as tf
 import random
 
-BATCH_SIZE = 200
 HEIGHT = 480
 WIDTH = 640
 CHANNEL = 3
 random.seed(18)
-data_dir = "./image/"
+data_dir = "./center_camera/"
 
 def read_file_list(list_file):
 	""" Read image file names and angles from list file
@@ -48,6 +47,7 @@ def read_data(input_queue):
 	value = tf.read_file(input_queue[0])
 	img = tf.image.decode_jpeg(value, channels = CHANNEL)
 	img = tf.image.resize_images(img,HEIGHT, WIDTH)
+	img = img[:,:,:]/255.0
 	tf.cast(angle, tf.float32)
 	return img, angle
 

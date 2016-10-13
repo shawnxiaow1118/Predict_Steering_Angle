@@ -19,13 +19,13 @@ def _variable_withweight_decay(name, shape, stddev, wd):
 		decay is 
 
 	"""
-batch_size = 10
 
 def inference(images):
 	""" 
 	Input: batch images,
 	Output: steering angle
 	"""
+	batch_size = images.get_shape()[0].value
 
 	with tf.variable_scope('conv1') as scope:
 		weights = tf.Variable(
@@ -131,6 +131,8 @@ def loss(output, angles):
 	Returns:
 		loss: Loss tensor of type float
 	"""
+	batch_size = output.get_shape()[0].value
+	
 	reshape = tf.reshape(angles, [batch_size,1])
 	angs = tf.string_to_number(angles, out_type = tf.float32)
 	### calculate square sum
