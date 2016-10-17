@@ -12,7 +12,7 @@ import random
 HEIGHT = 480
 WIDTH = 640
 CHANNEL = 3
-random.seed(18)
+#random.seed(18)
 data_dir = "./center_camera/"
 
 def read_file_list(list_file):
@@ -46,7 +46,7 @@ def read_data(input_queue):
 	#key, value = reader.read(input_queue[0])
 	value = tf.read_file(input_queue[0])
 	img = tf.image.decode_jpeg(value, channels = CHANNEL)
-	img = tf.image.resize_images(img,HEIGHT, WIDTH)
+	img = tf.image.resize_images(img,[HEIGHT, WIDTH])
 	img = img[:,:,:]/255.0
 	tf.cast(angle, tf.float32)
 	return img, angle
@@ -64,7 +64,7 @@ def input(filepath, BATCH_SIZE):
 	### Read filelist 
 	filenames, labels = read_file_list(filepath)
 	### Create file queue
-	input_queue = tf.train.slice_input_producer([filenames,labels])
+	input_queue = tf.train.slice_input_producer([filenames,labels],shuffle=True)
 	### read image from the input queue
 	image, ang = read_data(input_queue)
 	### create batch input
