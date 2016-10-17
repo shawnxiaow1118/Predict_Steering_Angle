@@ -10,17 +10,23 @@ import tensorflow as tf
 import pred_steer
 import input
 import time
+import os
+
+folder = './tensor/'
+for the_file in os.listdir(folder):
+	file_path = os.path.join(folder, the_file)
+	os.remove(file_path)
 
 input_path = "angles_train.txt"
 eval_path = "angles_valid.txt"
-BATCH_SIZE = 50
+BATCH_SIZE = 1
 
 def running():
 	with tf.Graph().as_default():
 		global_step = tf.Variable(0, trainable = False)
 
 		## get input
-		images, angles = input.input(input_path, BATCH_SIZE)
+		images, angles = input.distorted_inputs(input_path, BATCH_SIZE)
 
 		## inference build model
 		prediction = pred_steer.inference(images)
@@ -29,10 +35,10 @@ def running():
 		loss = pred_steer.loss(prediction, angles)
 
 		## build model per batch and update parameters
-		train_op = pred_steer.train(loss, 0.0008, global_step)
+		train_op = pred_steer.train(loss, 0.0002, global_step)
 
 		## get evaluation set 
-		eval_imgs, eval_angs = input.input(eval_path, BATCH_SIZE)
+		eval_imgs, eval_angs = input.distorted_inputs(eval_path, BATCH_SIZE)
 
 		## evaluation prediction
 		eval_pred = pred_steer.inference(eval_imgs)
@@ -47,9 +53,9 @@ def running():
 		#train_writer = tf.train.SummaryWriter("./tensorboard", graph = tf.get_default_graph())
 
 		tf.scalar_summary('train_RMSE', loss)
-		#tf.scalar_summary('train_pred', tf.reduce_mean(prediction))
+		tf.scalar_summary('train_pred', tf.reduce_mean(prediction))
 		#tf.scalar_summary('eval_pred', tf.reduce_mean(eval_pred))
-		#tf.scalar_summary('train_angle', tf.reduce_mean(tf.string_to_number(angles, out_type = tf.float32)))
+		tf.scalar_summary('train_angle', tf.reduce_mean(angles))
 		#tf.scalar_summary('eval_angle', tf.reduce_mean(tf.string_to_number(eval_angs, out_type = tf.float32)))
 
 		sess = tf.Session()

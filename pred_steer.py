@@ -214,7 +214,9 @@ def loss(output, angles):
 	batch_size = output.get_shape()[0].value
 	
 	reshape = tf.reshape(angles, [batch_size,1])
-	angs = tf.string_to_number(angles, out_type = tf.float32)
+
+	#angs = tf.string_to_number(angles, out_type = tf.float32)
+	angs = reshape
 	### calculate square sum
 	#angs = tf.sigmoid(angle)
 	sum_square = tf.square(tf.sub(angs, output))

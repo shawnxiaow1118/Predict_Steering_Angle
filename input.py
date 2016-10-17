@@ -97,25 +97,33 @@ def distorted_inputs(filepath, BATCH_SIZE):
 	Returns:
 		 A input data tensor with first dimension as batch_size and a tensor for the angls
 	"""
-	filenames = read_file_list(filepath)
+	### Read filelist 
+	filenames, labels = read_file_list(filepath)
 	### Create file queue
-	input_queue = tf.train.slice_input_producer(filenames)
+	input_queue = tf.train.slice_input_producer([filenames,labels],shuffle=True)
 	### read image from the input queue
-	image,ang = read_data(input_queue)
+	image, ang = read_data(input_queue)
+
+	n_ang = tf.string_to_number(ang, out_type=tf.float32)
+	f_o_n = random.random()
+	if f_o_n > 0.4:
 	### flip image randomly
-	distorted_image = tf.image.flip_left_right(image)
-	### modify brightness and contrast with random order
-	b_o_c = random.randint(0,1)
-	if b_o_c == 0:
-		distorted_image = tf.image.random_brightness(distorted_image, max_delta = 0.6)
-		distorted_image = tf.image.random_contrast(distorted_image, lower = 0.2, upper = 0.7)
+		distorted_image = tf.image.flip_left_right(image)
+		n_ang = - n_ang
 	else:
-		distorted_image = tf.image.random_contrast(distorted_image, lower = 0.2, upper = 0.7)
-		distorted_image = tf.image.random_brightness(distorted_image, max_delta = 0.6)
+		distorted_image = image
+	### modify brightness and contrast with random order
+	# b_o_c = random.randint(0,1)
+	# if b_o_c == 0:
+	# 	distorted_image = tf.image.random_brightness(distorted_image, max_delta = 0.6)
+	# 	distorted_image = tf.image.random_contrast(distorted_image, lower = 0.2, upper = 0.7)
+	# else:
+	# 	distorted_image = tf.image.random_contrast(distorted_image, lower = 0.2, upper = 0.7)
+	# 	distorted_image = tf.image.random_brightness(distorted_image, max_delta = 0.6)
 
 	### create batch input
-	min_after_dequeue = 150
-	capacity = min_after_dequeue + 3*BATCH_SIZE
-	images, angles = tf.train.shuffle_batch([distorted_image, ang], batch_size = BATCH_SIZE,
-		num_threads = 3, capacity = capacity, min_after_dequeue = min_after_dequeue)
+	# min_after_dequeue = 150
+	# capacity = min_after_dequeue + 3*BATCH_SIZE
+
+	images, angles = tf.train.batch([distorted_image, n_ang], batch_size = BATCH_SIZE,num_threads = 3)
 	return images, angles
