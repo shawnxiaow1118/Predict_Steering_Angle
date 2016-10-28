@@ -65,7 +65,7 @@ def inference(images, train_flag, drop_prob):
 		conv = tf.nn.conv2d(images, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
 		### batch normalization 
-		normed = batch_norm(bias, 24, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		### using normal relu adtivate functions
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
@@ -78,7 +78,7 @@ def inference(images, train_flag, drop_prob):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 36, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv3') as scope:
@@ -89,7 +89,7 @@ def inference(images, train_flag, drop_prob):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 48, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv4') as scope:
@@ -100,7 +100,7 @@ def inference(images, train_flag, drop_prob):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 64, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv5') as scope:
@@ -111,7 +111,7 @@ def inference(images, train_flag, drop_prob):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 64, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv6') as scope:
@@ -122,7 +122,7 @@ def inference(images, train_flag, drop_prob):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 64, train_flag, decay = 0.95, mode = 1)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('local7') as scope:
@@ -133,7 +133,7 @@ def inference(images, train_flag, drop_prob):
 		biases = tf.Variable(tf.zeros([300]),
                          name='biases')
 		bias = tf.matmul(reshape, weights)+biases
-		normed = batch_norm(bias, 300, train_flag, decay = 0.95, mode = 0)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
 		df = tf.nn.dropout(local, drop_prob)
 
@@ -145,7 +145,7 @@ def inference(images, train_flag, drop_prob):
 		biases = tf.Variable(tf.zeros([100]),
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
-		normed = batch_norm(bias, 100, train_flag, decay = 0.95, mode = 0)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
 		df = tf.nn.dropout(local, drop_prob)
 
@@ -155,7 +155,7 @@ def inference(images, train_flag, drop_prob):
 		biases = tf.Variable(tf.zeros([20]),
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
-		normed = batch_norm(bias, 20, train_flag, decay = 0.95, mode = 0)
+		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(tf.matmul(df, weights)+biases, name = scope.name)
 		df = tf.nn.dropout(local, drop_prob)
 
