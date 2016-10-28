@@ -51,7 +51,7 @@ def read_data(input_queue):
 	tf.cast(angle, tf.float32)
 	return img, angle
 
-def input(filepath, BATCH_SIZE):
+def origin_inputs(filepath, BATCH_SIZE):
 	""" Provide batch images and angles
 	Args: 
 		filepath: contains the path to the file containing list of images
@@ -67,8 +67,10 @@ def input(filepath, BATCH_SIZE):
 	input_queue = tf.train.slice_input_producer([filenames,labels],shuffle=True)
 	### read image from the input queue
 	image, ang = read_data(input_queue)
+	### transfer labels from string to float
+	n_ang = tf.string_to_number(ang, out_type=tf.float32)
 	### create batch input
-	images, angles = tf.train.batch([image, ang], batch_size = BATCH_SIZE)
+	images, angles = tf.train.batch([image, n_ang], batch_size = BATCH_SIZE, name = 'eval_input')
 	return images, angles
 
 #filenames,labels = read_file_list("./image/angles.txt")
@@ -105,13 +107,12 @@ def distorted_inputs(filepath, BATCH_SIZE):
 	image, ang = read_data(input_queue)
 
 	n_ang = tf.string_to_number(ang, out_type=tf.float32)
-	f_o_n = random.random()
-	if f_o_n > 0.4:
-	### flip image randomly
-		distorted_image = tf.image.flip_left_right(image)
-		n_ang = - n_ang
-	else:
-		distorted_image = image
+	rand = tf.random_uniform([], minval=0, maxval=1, dtype=tf.float32)
+	x = tf.constant(0.6)
+
+	distorted_image = tf.cond(tf.less(rand, x), lambda: tf.image.flip_left_right(image), lambda: image)
+	n_ang = tf.cond(tf.less(rand, x), lambda: -n_ang, lambda: n_ang)
+
 	### modify brightness and contrast with random order
 	# b_o_c = random.randint(0,1)
 	# if b_o_c == 0:
@@ -125,5 +126,5 @@ def distorted_inputs(filepath, BATCH_SIZE):
 	# min_after_dequeue = 150
 	# capacity = min_after_dequeue + 3*BATCH_SIZE
 
-	images, angles = tf.train.batch([distorted_image, n_ang], batch_size = BATCH_SIZE,num_threads = 3)
+	images, angles = tf.train.batch([distorted_image, n_ang], batch_size = BATCH_SIZE,num_threads = 3, name = "distorted_input")
 	return images, angles
