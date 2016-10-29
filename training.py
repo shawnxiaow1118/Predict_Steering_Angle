@@ -24,8 +24,9 @@ eval_path = "angles_valid.txt"
 train_flag = tf.placeholder(tf.bool, name='train_flag')
 ### actually this is the keep probability in those fully connected layers
 drop_prob = tf.placeholder('float', name='drop_prob')
+wd = tf.placeholder('float', name='wd')
 
-def running(learning_rate, keep_prob, BATCH_SIZE):
+def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 	x = tf.placeholder(tf.float32, [BATCH_SIZE, 480, 640, 3])
 	y = tf.placeholder(tf.float32, [BATCH_SIZE])
 
@@ -37,7 +38,7 @@ def running(learning_rate, keep_prob, BATCH_SIZE):
 	images, angles = input.distorted_inputs(input_path, BATCH_SIZE)
 
 	## inference build model
-	prediction = pred_steer.inference(x, train_flag, drop_prob)
+	prediction = pred_steer.inference(x, train_flag, drop_prob, wd)
 
 	## calculate loss
 	loss = pred_steer.loss(prediction, y)
@@ -74,12 +75,12 @@ def running(learning_rate, keep_prob, BATCH_SIZE):
 		start_time = time.time()
 		images_array, angles_array = sess.run([images, angles])
 		_, summary,pred1 = sess.run([train_op, merged, prediction], 
-			feed_dict = {x: images_array, y: angles_array,train_flag:True, drop_prob:keep_prob})
+			feed_dict = {x: images_array, y: angles_array,train_flag:True, drop_prob:keep_prob, wd:weight_decay })
 		if step%1 == 0:
 			eval_images_array, eval_angles_array = sess.run([eval_imgs, eval_angs])
 			#print("step: %d, eval_loss: %g"%(step, sess.run(loss, feed_dict = {
 			#	x: eval_images_array, y:eval_angles_array, train_flag:False, drop_prob:1.0})))
-			out = sess.run(prediction, feed_dict = {x: eval_images_array, train_flag:False, drop_prob:1.0})
+			out = sess.run(loss, feed_dict = {x: eval_images_array, y:eval_angles_array, train_flag:False, drop_prob:1.0, wd:weight_decay})
 			print(out)
 			# if step%100 == 0:
 			# 	checkpath = "./save/model.ckpt"
@@ -96,7 +97,7 @@ def running(learning_rate, keep_prob, BATCH_SIZE):
 
 def main(argv = None):
 	## argv[4] = {name_of_py_file, learning_rate, drop_prob, BATCH_SIZE}
-	running(float(argv[1]), float(argv[2]), int(argv[3]))
+	running(float(argv[1]), float(argv[2]), int(argv[3]), float(argv[4]))
 
 if __name__=='__main__':
 	tf.app.run()
