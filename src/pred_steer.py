@@ -58,11 +58,11 @@ def inference(images, train_flag, drop_prob, wd):
 	with tf.variable_scope('conv1') as scope:
 		### weights initialization
 		weights = tf.Variable(
-			tf.truncated_normal([5,5,3,24], stddev = math.sqrt(2.0/75.0), name='weights'))
+			tf.truncated_normal([3,3,3,24], stddev = math.sqrt(2.0/27.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([24]),
                       	name='biases')
@@ -70,60 +70,68 @@ def inference(images, train_flag, drop_prob, wd):
 		conv = tf.nn.conv2d(images, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
 		### batch normalization 
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 24, train_flag, 0.8, 1)
+		#normed = bias
+		##normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		### using normal relu adtivate functions
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
-	with tf.variable_scope('max_pool_1') as scope:
-		pooled = tf.nn.max_pool(conv_non, [1,2,2,1], [1,2,2,1], padding= 'VALID')
+	#with tf.variable_scope('max_pool_1') as scope:
+	#	pooled = tf.nn.max_pool(conv_non, [1,2,2,1], [1,2,2,1], padding= 'VALID')
 
 
 	with tf.variable_scope('conv2') as scope:
 		weights = tf.Variable(
-			tf.truncated_normal([5,5,24,36], stddev = math.sqrt(2.0/600.0), name='weights'))
+			tf.truncated_normal([3,3,24,36], stddev = math.sqrt(2.0/216.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([36]),
                          name='biases')
 
-		conv = tf.nn.conv2d(pooled, weights,[1,2,2,1],padding = 'VALID')
+		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 36, train_flag, 0.8, 1)
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
+		#normed = bias
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv3') as scope:
 		weights = tf.Variable(
-			tf.truncated_normal([5,5,36,48], stddev = math.sqrt(2.0/900.0), name='weights'))
+			tf.truncated_normal([3,3,36,48], stddev = math.sqrt(2.0/324.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([48]),
                          name='biases')
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 48, train_flag, 0.8, 1)
+		#normed = bias
+		#normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv4') as scope:
 		weights = tf.Variable(
-			tf.truncated_normal([5,5,48,64], stddev = math.sqrt(2.0/1200.0), name='weights'))
+			tf.truncated_normal([3,3,48,64], stddev = math.sqrt(2.0/432.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([64]),
                          name='biases')
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 64, train_flag, 0.8, 1)
+		#normed = bias
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	with tf.variable_scope('conv5') as scope:
@@ -131,15 +139,17 @@ def inference(images, train_flag, drop_prob, wd):
 			tf.truncated_normal([3,3,64,64], stddev = math.sqrt(2.0/576.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([64]),
                          name='biases')
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 64, train_flag, 0.8, 1)
+		#normed = bias
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
 
 	# with tf.variable_scope('conv6') as scope:
@@ -160,14 +170,17 @@ def inference(images, train_flag, drop_prob, wd):
 			tf.truncated_normal([dim, 600], stddev = math.sqrt(2.0/dim), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([600]),
                          name='biases')
 		bias = tf.matmul(reshape, weights)+biases
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 600, train_flag, 0.8, 0)
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
+		#normed = bias
 		local = tf.nn.relu(normed, name = scope.name)
+		## drop out
 		df = tf.nn.dropout(local, drop_prob)
 
 
@@ -177,13 +190,15 @@ def inference(images, train_flag, drop_prob, wd):
 			tf.truncated_normal([600, 100], stddev = math.sqrt(2.0/600), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([100]),
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		#normed = bias
+		normed = batch_norm(bias, 100, train_flag, 0.8, 0)
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
 		df = tf.nn.dropout(local, drop_prob)
 
@@ -192,13 +207,15 @@ def inference(images, train_flag, drop_prob, wd):
 			tf.truncated_normal([100, 20], stddev = math.sqrt(2.0/100.0), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([20]),
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
-		normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
+		normed = batch_norm(bias, 20, train_flag, 0.8, 0)
+		#normed = bias
+		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
 
 
@@ -207,8 +224,8 @@ def inference(images, train_flag, drop_prob, wd):
 			tf.truncated_normal([20, 1], stddev = math.sqrt(2.0/20), name='weights'))
 
 		### weights decay 
-		#weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
-		#tf.add_to_collection('losses', weight_decay)
+		weight_decay = tf.mul(tf.nn.l2_loss(weights), wd)
+		tf.add_to_collection('losses', weight_decay)
 
 		biases = tf.Variable(tf.zeros([1]),
                          name='biases')
@@ -238,10 +255,10 @@ def loss(output, angles):
 	mean_square = tf.reduce_mean(sum_square)
 
 	### do not take square root here! It has influence on the backprobagation
-	#tf.add_to_collection('losses', mean_square)
-	#loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
+	tf.add_to_collection('losses', mean_square)
+	loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
 	#tf.scalar_summary('RMSE', loss)
-	return mean_square
+	return loss #mean_square
 
 def train(loss, learning_rate, global_step):
 	""" Setting the training operation
@@ -252,15 +269,15 @@ def train(loss, learning_rate, global_step):
 	### creat the optimizer using learing_rate
 	optimizer = tf.train.AdamOptimizer(learning_rate)
 
-	grads = optimizer.compute_gradients(loss)
+	#grads = optimizer.compute_gradients(loss)
 
 
-	for var in tf.trainable_variables():
-		tf.histogram_summary(var.op.name, var)
+	#for var in tf.trainable_variables():
+	#	tf.histogram_summary(var.op.name, var)
 
-	for grad, var in grads:
-		if grad is not None:
-			tf.histogram_summary(var.op.name+"/gradients",grad)
+	#for grad, var in grads:
+	#	if grad is not None:
+	#		tf.histogram_summary(var.op.name+"/gradients",grad)
 	###  creat a global variable
 	# global_step = tf.Variable(0, name = 'global_step',trainanle = False)
 	### note use global step to track trainging step

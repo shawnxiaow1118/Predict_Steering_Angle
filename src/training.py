@@ -8,7 +8,7 @@
 
 import tensorflow as tf
 import pred_steer
-import input
+import read_data
 import time
 import os
 
@@ -27,7 +27,7 @@ drop_prob = tf.placeholder('float', name='drop_prob')
 wd = tf.placeholder('float', name='wd')
 
 def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
-	x = tf.placeholder(tf.float32, [BATCH_SIZE, 480, 640, 3])
+	x = tf.placeholder(tf.float32, [BATCH_SIZE, 140, 320, 3])
 	y = tf.placeholder(tf.float32, [BATCH_SIZE])
 
 	global_step = tf.Variable(0, trainable = False)
@@ -35,7 +35,18 @@ def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 	##### training queue inputs #####
 
 	## get input
-	images, angles = input.distorted_inputs(input_path, BATCH_SIZE)
+	train_images, train_angles, valid_images, valid_angles = read_data.read(input_path, eval_path)
+
+	num_train = len(train_angles)
+	num_valid = len(valid_angles)
+
+	train_per_epoch = int((num_train*1.0)/BATCH_SIZE)
+	valid_per_epoch = int((num_valid*1.0)/BATCH_SIZE)
+
+
+	## pointer 
+	train_pointer = 0
+	valid_pointer = 0
 
 	## inference build model
 	prediction = pred_steer.inference(x, train_flag, drop_prob, wd)
@@ -45,9 +56,6 @@ def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 
 	## build model per batch and update parameters
 	train_op = pred_steer.train(loss, learning_rate, global_step)
-
-	## get evaluation set 
-	eval_imgs, eval_angs = input.origin_inputs(eval_path, BATCH_SIZE)
 
 	## build initialization peration 
 	init = tf.initialize_all_variables()
@@ -68,32 +76,46 @@ def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 
 
 	sess.run(init)
+
+	epoch = 0
 		## start the queue runners
-	coord = tf.train.Coordinator()
-	enqueue_threads = tf.train.start_queue_runners(sess = sess, coord = coord)
+	#coord = tf.train.Coordinator()
+	#enqueue_threads = tf.train.start_queue_runners(sess = sess, coord = coord)
+	
 	for step in range(1,220000):
 		start_time = time.time()
-		images_array, angles_array = sess.run([images, angles])
-		_, summary,pred1 = sess.run([train_op, merged, prediction], 
-			feed_dict = {x: images_array, y: angles_array,train_flag:True, drop_prob:keep_prob, wd:weight_decay })
+		images_array, angles_array = read_data.Train_Batch(train_images, train_angles, BATCH_SIZE, train_pointer)
+		_, summary = sess.run([train_op, merged], 
+			feed_dict = {x: images_array, y: angles_array, train_flag:True, drop_prob:keep_prob, wd:weight_decay })
 		if step%10 == 0:
-			eval_images_array, eval_angles_array = sess.run([eval_imgs, eval_angs])
+			eval_images_array, eval_angles_array = read_data.Valid_Batch(valid_images, valid_angles, BATCH_SIZE, valid_pointer)
 			#print("step: %d, eval_loss: %g"%(step, sess.run(loss, feed_dict = {
 			#	x: eval_images_array, y:eval_angles_array, train_flag:False, drop_prob:1.0})))
-			out = sess.run(loss, feed_dict = {x: eval_images_array, y:eval_angles_array, train_flag:False, drop_prob:1.0, wd:weight_decay})
+			out = sess.run(loss, feed_dict = {x: eval_images_array, y: eval_angles_array, train_flag:False, drop_prob:1.0, wd:weight_decay})
 			print("loss:" + str(out))
-			# if step%100 == 0:
-			# 	checkpath = "./save/model.ckpt"
-			# 	filename = saver.save(sess, checkpath)
-			# 	print("Model saved in file: %s" %filename)
+			if step%20 == 0:
+				#checkpath = "./save/model.ckpt"
+				filename = saver.save(sess, './save/my-model', global_step=global_step) 
+				#filename = saver.save(sess, checkpath)
+				print("Model saved in file: %s" %filename)
 			# _, summary = sess.run([train_op, summary_op])
-			# train_writer.add_summary(summary, step)
+			#train_writer.add_summary(summary, step)
 		duration = time.time() - start_time
 		writer.add_summary(summary, step)
 		print(str(step) + " time:"+ str(duration))# + " loss: " + str(loss_value))
+
+		if (train_pointer > num_train):
+			train_pointer = 0
+			train_images, train_angles = read_data.Shuffle(train_images, train_angles)
+			epoch += 1
+			print("Epoch " + epoch)
+
+		if (valid_pointer > num_valid):
+			valid_pointer = 0
+			valid_images, valid_angles = read_data.Shuffle(valid_images, valid_angles)
 			#print(pred)
-	coord.request_stop()
-	coord.join(enqueue_threads)
+	# coord.request_stop()
+	# coord.join(enqueue_threads)
 
 def main(argv = None):
 	## argv[4] = {name_of_py_file, learning_rate, drop_prob, BATCH_SIZE}
