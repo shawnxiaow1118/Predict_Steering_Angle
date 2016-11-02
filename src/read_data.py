@@ -5,8 +5,6 @@ import random
 
 
 def read(train_file, valid_file):
-	random.seed(18)
-
 	train_angles = []
 	train_images = []
 	valid_angles = []
@@ -40,30 +38,36 @@ def read(train_file, valid_file):
 	# valid_images, valid_angles = zip(*c_valid)
 
 
-def Train_Batch(train_images, train_angles,batch_size, train_pointer):
+def Train_Batch(train_images, train_angles,batch_size): #, train_pointer):
 	imgs_out = []
 	angs_out = []
 	num_train = len(train_angles)
 	for i in range(0, batch_size):
-		imgs = scipy.misc.imread(train_images[(train_pointer+i)%num_train])[-280:]
+		index  = random.randint(0, num_train-1)
+		imgs = scipy.misc.imread(train_images[index])[-280:]
+		#imgs = scipy.misc.imread(train_images[(train_pointer+i)%num_train])[-280:]
 		l_imgs = scipy.misc.imresize(imgs, [140,320])/255.0
-		angle = train_angles[(train_pointer+i)%num_train]
+		angle = train_angles[index]
+		#angle = train_angles[(train_pointer+i)%num_train]
 		imgs_out.append(l_imgs)
 		angs_out.append(angle)
-	train_pointer = train_pointer + batch_size
+	#train_pointer = train_pointer + batch_size
 	return imgs_out, angs_out
 
-def Valid_Batch(valid_images, valid_angles, batch_size, valid_pointer):
+def Valid_Batch(valid_images, valid_angles, batch_size): #, valid_pointer):
 	imgs_out = []
 	angs_out = []
 	num_valid = len(valid_angles)
 	for i in range(0, batch_size):
-		imgs = scipy.misc.imread(valid_images[(valid_pointer+i)%num_valid])[-280:]
+		index = random.randint(0, num_valid-1)
+		imgs = scipy.misc.imread(valid_images[index])[-280:]	
+		#imgs = scipy.misc.imread(valid_images[(valid_pointer+i)%num_valid])[-280:]
 		l_imgs = scipy.misc.imresize(imgs, [140,320])/255.0
-		angle = valid_angles[(valid_pointer+i)%num_valid]
+		angle = valid_angles[index]
+		#angle = valid_angles[(valid_pointer+i)%num_valid]
 		imgs_out.append(l_imgs)
 		angs_out.append(angle)
-	valid_pointer = valid_pointer + batch_size
+	#valid_pointer = valid_pointer + batch_size
 	return imgs_out, angs_out
 
 def Shuffle(images, angles):

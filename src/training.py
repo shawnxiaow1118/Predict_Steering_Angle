@@ -11,6 +11,9 @@ import pred_steer
 import read_data
 import time
 import os
+import random
+
+random.seed(18)
 
 folder = './tensor/'
 for the_file in os.listdir(folder):
@@ -84,15 +87,17 @@ def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 	
 	for step in range(1,220000):
 		start_time = time.time()
-		images_array, angles_array = read_data.Train_Batch(train_images, train_angles, BATCH_SIZE, train_pointer)
+		images_array, angles_array = read_data.Train_Batch(train_images, train_angles, BATCH_SIZE) #, train_pointer)
 		_, summary = sess.run([train_op, merged], 
 			feed_dict = {x: images_array, y: angles_array, train_flag:True, drop_prob:keep_prob, wd:weight_decay })
 		if step%10 == 0:
-			eval_images_array, eval_angles_array = read_data.Valid_Batch(valid_images, valid_angles, BATCH_SIZE, valid_pointer)
+			train_images_sub, train_angles_sub = read_data.Train_Batch(train_images, train_angles, BATCH_SIZE)
+			eval_images_array, eval_angles_array = read_data.Valid_Batch(valid_images, valid_angles, BATCH_SIZE)#, valid_pointer)
 			#print("step: %d, eval_loss: %g"%(step, sess.run(loss, feed_dict = {
 			#	x: eval_images_array, y:eval_angles_array, train_flag:False, drop_prob:1.0})))
+			train_out = sess.run(loss, feed_dict = {x: train_images_sub, y: train_angles_sub, train_flag:False, drop_prob:1.0, wd:weight_decay})
 			out = sess.run(loss, feed_dict = {x: eval_images_array, y: eval_angles_array, train_flag:False, drop_prob:1.0, wd:weight_decay})
-			print("loss:" + str(out))
+			print("train_rmse: " + str(train_out) + " loss: " + str(out))
 			if step%20 == 0:
 				#checkpath = "./save/model.ckpt"
 				filename = saver.save(sess, './save/my-model', global_step=global_step) 
@@ -104,16 +109,16 @@ def running(learning_rate, keep_prob, BATCH_SIZE, weight_decay):
 		writer.add_summary(summary, step)
 		print(str(step) + " time:"+ str(duration))# + " loss: " + str(loss_value))
 
-		if (train_pointer > num_train):
-			train_pointer = 0
-			train_images, train_angles = read_data.Shuffle(train_images, train_angles)
-			epoch += 1
-			print("Epoch " + epoch)
+		# if (train_pointer > num_train):
+		# 	train_pointer = 0
+		# 	train_images, train_angles = read_data.Shuffle(train_images, train_angles)
+		# 	epoch += 1
+		# 	print("Epoch " + str(epoch))
 
-		if (valid_pointer > num_valid):
-			valid_pointer = 0
-			valid_images, valid_angles = read_data.Shuffle(valid_images, valid_angles)
-			#print(pred)
+		# if (valid_pointer > num_valid):
+		# 	valid_pointer = 0
+		# 	valid_images, valid_angles = read_data.Shuffle(valid_images, valid_angles)
+		# 	#print(pred)
 	# coord.request_stop()
 	# coord.join(enqueue_threads)
 
