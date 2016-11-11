@@ -70,7 +70,7 @@ def inference(images, train_flag, drop_prob, wd):
 		conv = tf.nn.conv2d(images, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
 		### batch normalization 
-		normed = batch_norm(bias, 24, train_flag, 0.8, 1)
+		normed = batch_norm(bias, 24, train_flag, 0.9, 1)
 		#normed = bias
 		##normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		### using normal relu adtivate functions
@@ -93,7 +93,7 @@ def inference(images, train_flag, drop_prob, wd):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 36, train_flag, 0.8, 1)
+		normed = batch_norm(bias, 36, train_flag, 0.9, 1)
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		#normed = bias
 		conv_non = tf.nn.relu(normed, name = scope.name)
@@ -111,7 +111,7 @@ def inference(images, train_flag, drop_prob, wd):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 48, train_flag, 0.8, 1)
+		normed = batch_norm(bias, 48, train_flag, 0.9, 1)
 		#normed = bias
 		#normed = tf.contrib.layers.batch_norm(bias, 0.99, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
@@ -129,7 +129,7 @@ def inference(images, train_flag, drop_prob, wd):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 64, train_flag, 0.8, 1)
+		normed = batch_norm(bias, 64, train_flag, 0.9, 1)
 		#normed = bias
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
@@ -147,7 +147,7 @@ def inference(images, train_flag, drop_prob, wd):
 
 		conv = tf.nn.conv2d(conv_non, weights,[1,2,2,1],padding = 'VALID')
 		bias = tf.nn.bias_add(conv, biases)
-		normed = batch_norm(bias, 64, train_flag, 0.8, 1)
+		normed = batch_norm(bias, 64, train_flag, 0.9, 1)
 		#normed = bias
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		conv_non = tf.nn.relu(normed, name = scope.name)
@@ -176,7 +176,7 @@ def inference(images, train_flag, drop_prob, wd):
 		biases = tf.Variable(tf.zeros([600]),
                          name='biases')
 		bias = tf.matmul(reshape, weights)+biases
-		normed = batch_norm(bias, 600, train_flag, 0.8, 0)
+		normed = batch_norm(bias, 600, train_flag, 0.9, 0)
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		#normed = bias
 		local = tf.nn.relu(normed, name = scope.name)
@@ -197,7 +197,7 @@ def inference(images, train_flag, drop_prob, wd):
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
 		#normed = bias
-		normed = batch_norm(bias, 100, train_flag, 0.8, 0)
+		normed = batch_norm(bias, 100, train_flag, 0.9, 0)
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
 		df = tf.nn.dropout(local, drop_prob)
@@ -213,7 +213,7 @@ def inference(images, train_flag, drop_prob, wd):
 		biases = tf.Variable(tf.zeros([20]),
                          name='biases')
 		bias = tf.matmul(df, weights)+biases
-		normed = batch_norm(bias, 20, train_flag, 0.8, 0)
+		normed = batch_norm(bias, 20, train_flag, 0.9, 0)
 		#normed = bias
 		#normed = tf.contrib.layers.batch_norm(bias, 0.8, epsilon = 1e-3, is_training=train_flag)
 		local = tf.nn.relu(normed, name = scope.name)
@@ -253,12 +253,12 @@ def loss(output, angles):
 	sum_square = tf.square(tf.sub(angs, output))
 	### calculate mean square mean
 	mean_square = tf.reduce_mean(sum_square)
-
+	loss = mean_square
 	### do not take square root here! It has influence on the backprobagation
-	tf.add_to_collection('losses', mean_square)
-	loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
+	#tf.add_to_collection('losses', mean_square)
+	#loss = tf.add_n(tf.get_collection('losses'), name='total_loss')
 	#tf.scalar_summary('RMSE', loss)
-	return loss #mean_square
+	return loss #, loss - mean_square #mean_square
 
 def train(loss, learning_rate, global_step):
 	""" Setting the training operation
@@ -268,7 +268,7 @@ def train(loss, learning_rate, global_step):
 	"""
 	### creat the optimizer using learing_rate
 	optimizer = tf.train.AdamOptimizer(learning_rate)
-
+	#optimizer = tf.train.RMSPropOptimizer(learning_rate,decay = 0.9, momentum = 0.9)
 	#grads = optimizer.compute_gradients(loss)
 
 
