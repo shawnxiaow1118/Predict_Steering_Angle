@@ -10,22 +10,19 @@ import tensorflow as tf
 import math
 import numpy as np
 
-def _activation_summary(x):
-  """Helper to create summaries for activations.
-  Creates a summary that provides a histogram of activations.
-  Creates a summary that measures the sparsity of activations.
-  Args:
-    x: Tensor
-  Returns:
-    nothing
-  """
-  # Remove 'tower_[0-9]/' from the name in case this is a multi-GPU training
-  # session. This helps the clarity of presentation on tensorboard.
-  tensor_name = re.sub('%s_[0-9]*/' % TOWER_NAME, '', x.op.name)
-  tf.histogram_summary(tensor_name + '/activations', x)
-  tf.scalar_summary(tensor_name + '/sparsity', tf.nn.zero_fraction(x))
 
 def batch_norm(x, depth, train_flag, decay, mode, scope = 'bn'):
+	""" Calaulate batch normalization to acelerate the learning process
+	Args: 
+		x : 2d or 4d input tensor
+		depth: output dimensions
+		train_flag: whether in the training phase or testing phase
+		decay: parameters controls the calculation of mean and variance
+		mode: 0 for 2d input, 1 for 4d input, all return the normalized version along the last dimension
+		scope: name scope
+	Output:
+		normalized tensors with same dimension
+	"""
 	with tf.variable_scope(scope):
 		beta = tf.Variable(tf.constant(1.0, shape = [depth]), name = 'beta'
 			, trainable = True)
@@ -49,9 +46,14 @@ def batch_norm(x, depth, train_flag, decay, mode, scope = 'bn'):
 
 
 def inference(images, train_flag, drop_prob, wd):
-	""" 
-	Input: batch images,
-	Output: steering angle
+	""" The network structure for the whole model
+	Args:
+		images: input 4d tensor
+		train_flag: whether in training phase or testing phase
+		dopr_prob: the keep_probability of dropout layer
+		we: weight decay parameter
+	Output:
+		Predictions in tensor format
 	"""
 	batch_size = images.get_shape()[0].value
 
