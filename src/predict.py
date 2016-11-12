@@ -35,7 +35,7 @@ train_flag = tf.placeholder(tf.bool, name='train_flag')
 sess.run(init)
 prediction = pred_steer.inference(x, train_flag, drop_prob, wd)
 saver = tf.train.Saver()
-saver.restore(sess, "./save/my-model-167000")
+saver.restore(sess, "./save/my-model-183000")
 
 predictions = []
 names  = []
@@ -52,5 +52,5 @@ for name in test_file_name:
 
 out = pd.DataFrame({'frame_id': names,'steering_angle': predictions})
 
-out.to_csv('submission3.csv', index = False)
+out.to_csv('submission.csv', index = False)
 
