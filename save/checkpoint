@@ -1,0 +1,6 @@
+model_checkpoint_path: "my-model-183000"
+all_model_checkpoint_paths: "my-model-175000"
+all_model_checkpoint_paths: "my-model-177000"
+all_model_checkpoint_paths: "my-model-179000"
+all_model_checkpoint_paths: "my-model-181000"
+all_model_checkpoint_paths: "my-model-183000"
